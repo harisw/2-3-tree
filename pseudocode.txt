@@ -1,0 +1,84 @@
+DELETION
+
+k = key to delete
+x = node containing k
+p = x->parent
+min/maxParent = minvalue in parent
+nearest = first node before (with the same level)
+
+if(x is leaf)
+	if(x is 3node)
+		delete k
+	else if(x is 2node)
+		delete x
+		if(p is 3node)
+			if(x is lChild)
+				if(p->mChild is 3node)
+					move p->minKey to take x's place
+					promote p->mChild->minKey as p->minKey
+				else
+					merge minParent with child to be lChild
+			if(x is mChild)
+				if(p->lChild is 3node)
+					move p->minKey to take x's place
+					promote p->lChild->maxKey as p->minKey
+				else if(p->rChild is 3node)
+					move p->maxKey to take x's place
+					promote p->rChild->minKey as p->maxKey
+				else
+					merge minParent with child to be lChild
+			else
+				if(p->mChild is 3node)
+					move p->maxKey to take x's place
+					promote p->mChild->maxKey as p->maxKey
+				else
+					merge maxParent with child to be rChild
+		else if(p is 2node)
+			if(sibling is 3node)
+				move nearest sibling as parent
+				move parent down to take x's place
+			else if(sibling is 2node)
+				merge parent with sibling
+				move grandparent down as parent
+				if(uncle(node before) of parent is 2node)
+					merge uncle with parent
+					merge uncle's family with parent family
+				else if(uncle is 3node)
+					move uncle up as grandparent
+					steal nearest sibling as parent's child
+
+else if (x is internal node)
+	if(x is 2node)
+		if(one of child is 3node)
+			take nearest childnode to take x's place
+		else
+			merge child
+			move nearest parent at x's place
+			if (sibling is 2node)
+				merge sibling with x's place
+			if (sibling is 3node)
+				move nearest sibling up to parent
+				steal nearest sibling's child as our child
+	else
+		if(x is minKey)
+			if LChild is 3node
+				take maxkey of Lchild as x
+			else if mChild is 3node
+				take minKey of mChild as x
+			else
+				merge L&M child
+		else if x is maxKey
+			if mChild is 3node
+				take maxKey of mChild as x
+			else if rChild is 3node
+				take minKey of rChild as x
+			else
+				merge M&R child
+else if (x is root)
+	if x is 3node
+		if x is minKey
+			take LeftChild leaf's maxKey to x's place
+			fix (LeftChild leaf's->parent)
+		else if x is maxKey
+			take MidChild leaf's maxKey to x's place
+			fix (MidChild leaf's->parent)
