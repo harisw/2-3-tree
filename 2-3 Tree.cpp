@@ -280,18 +280,188 @@ struct twothreeTree {
     void deleteKeyFrom2Node(node* x)
     {
         node* p = x->p;
-        if (p->lChild = x) {
+        if (p->lChild == x) {
             p->lChild = NULL;
-        } else if (p->mChild = x) {
+        } else if (p->mChild == x) {
             p->mChild = NULL;
         }
         else {
             p->rChild = NULL;
         }
     }
-    void deletion(int key)
+    void dragChild(node* p, string direction)
     {
-        node* x = search(root, key);
+        if (direction == "left") {
+            p->lChild = p->mChild;
+            p->mChild = p->rChild;
+        }
+        else {
+            p->mChild = p->lChild;
+            p->rChild = p->mChild;
+        }
+    }
+    void getPredeccessor(node* p)
+    {
+        //MOVE GRANDP AS P
+        node* grandp = p->p;
+        if (grandp->lChild == p) {
+            p->val = grandp->minKey;
+
+            node* uncle = grandp->mChild;
+            if (uncle->val == NULL) {       //IF UNCLE IS 2NODE
+                grandp->minKey = uncle->minKey;
+                convert3To2(uncle, "max");
+            
+                //STEAL UNCLE CHILD
+                p->rChild = uncle->lChild;
+                uncle->lChild = uncle->mChild;
+                uncle->mChild = NULL;
+            }
+            else {
+                //MERGE UNCLE AND PARENT
+                p->minKey = p->val;
+                p->val = NULL;
+                p->maxKey = uncle->val;
+
+                p->mChild = uncle->lChild;
+                p->rChild = uncle->rChild;
+                p->mChild->p = p;
+                p->rChild->p = p;
+                grandp->mChild = NULL;
+            }
+        }
+        else if (grandp->mChild == p) {
+            p->val = grandp->minKey;
+            
+            if (grandp->lChild->val == NULL) {       //IF left UNCLE IS 3NODE
+                node* uncle = grandp->lChild;
+
+                grandp->minKey = uncle->maxKey;
+                convert3To2(uncle, "min");
+
+                //STEAL UNCLE CHILD
+                p->lChild = uncle->rChild;
+                uncle->rChild = uncle->mChild;
+                uncle->lChild = NULL;
+            }
+            else if (grandp->rChild->val == NULL) {     //IF RIGHT UNCLE IS 3NODE
+                node* uncle = grandp->rChild;
+
+                grandp->maxKey = uncle->minKey;
+                convert3To2(uncle, "max");
+
+                p->rChild = uncle->lChild;
+                uncle->lChild = uncle->mChild;
+                uncle->mChild = NULL;
+            }
+            else {                              //MERGE LEFT UNCLE AND P
+                node* uncle = grandp->lChild;
+
+                p->maxKey = p->val;
+                p->val = NULL;
+                p->minKey = uncle->val;
+
+                p->mChild = uncle->rChild;
+                p->lChild = uncle->lChild;
+                p->mChild->p = p;
+                p->lChild->p = p;
+                grandp->lChild = p;
+                grandp->mChild = NULL;
+            }
+        }
+        else {
+            p->val = grandp->maxKey;
+
+            node* uncle = grandp->mChild;
+            if (uncle->val == NULL) {       //IF UNCLE IS 2NODE
+                grandp->maxKey = uncle->maxKey;
+                convert3To2(uncle, "min");
+
+                //STEAL UNCLE CHILD
+                p->lChild = uncle->rChild;
+                uncle->rChild = uncle->mChild;
+                uncle->mChild = NULL;
+            }
+            else {
+                //MERGE UNCLE AND PARENT
+                p->maxKey = p->val;
+                p->val = NULL;
+                p->minKey = uncle->val;
+
+                p->mChild = uncle->rChild;
+                p->lChild = uncle->lChild;
+                p->mChild->p = p;
+                p->lChild->p = p;
+                grandp->mChild = NULL;
+            }
+        }
+    }
+    void getSuccessor(node* x)
+    {
+        if (x->val != NULL) {
+            if (x->lChild->val == NULL) {
+                x->val = x->lChild->maxKey;
+                convert3To2(x, "min");
+            }
+            else {
+                x->val = x->rChild->minKey;
+                convert3To2(x, "max");
+            }
+        }
+    }
+    node* getInnerEdgeLeaf(string direction)
+    {
+        node* res = root;
+        if (direction == "left") {
+            while (res->lChild == NULL && res->rChild == NULL)
+                res = res->rChild;
+        }
+        else {
+            while (res->lChild == NULL && res->rChild == NULL)
+                res = res->lChild;
+        }
+        return res;
+    }
+    void getSuccessor3Node(node* x)
+    {
+        if (x->minKey == NULL) {
+            if (x->lChild->val == NULL) {
+                x->minKey = x->lChild->maxKey;
+                convert3To2(x->lChild, "min");
+            }
+            else if (x->mChild->val == NULL) {
+                x->minKey = x->mChild->minKey;
+                convert3To2(x->mChild, "max");
+            }
+            else {      //MERGE L&M CHILD
+                x->lChild->minKey = x->lChild->val;
+                x->lChild->maxKey = x->mChild->val;
+                x->lChild->val = NULL;
+                x->mChild = NULL;
+                convert3To2(x, "max");
+            }
+        }
+        else {
+            if (x->mChild->val == NULL) {
+                x->maxKey = x->mChild->maxKey;
+                convert3To2(x->mChild, "min");
+            }
+            else if (x->rChild->val == NULL) {
+                x->maxKey = x->rChild->minKey;
+                convert3To2(x->rChild, "max");
+            }
+            else {
+                x->rChild->minKey = x->mChild->val;
+                x->rChild->maxKey = x->rChild->val;
+                x->rChild->val = NULL;
+                x->mChild = NULL;
+                convert3To2(x, "min");
+            }
+        }
+    }
+    void deletion(int key, node* target = NULL)
+    {
+        node* x = target == NULL ? search(root, key) : target;
         if (x == NULL) {
             cout << "Key NOT FOUND" << endl;
             return;
@@ -300,12 +470,11 @@ struct twothreeTree {
         if (x->lChild == NULL && x->rChild == NULL) {
             if (x->val == NULL) {
                 deleteKeyFrom3Node(x, key);
-                return;
             }
             else {
                 deleteKeyFrom2Node(x);
                 node* p = x->p;
-                if (p->val == NULL) {
+                if (p->val == NULL) {       //IF PARENT IS 3NODE
                     if (p->lChild == NULL) {    //IF DELETE LCHILD
                         if (p->mChild->val == NULL) {
                             node* mChild = p->mChild;
@@ -373,8 +542,103 @@ struct twothreeTree {
                         }
                     }
                 }
+
+
+                else {          //IF PARENT IS 2NODE  
+                    if (p->lChild == NULL) {     //IF X IS LEFT
+                        node* sibling = p->rChild;
+                        //IF SIBLING IS 3NODE
+                        if (sibling->val == NULL) {
+                            node* newX = new node;
+                            newX->val = p->val;
+                            p->lChild = newX;
+                            p->val = sibling->minKey;
+                            convert3To2(p->rChild, "max");
+                        }
+                        else {
+                            //MERGE P AND RCHILD AS NEW LCHILD
+                            node* newLChild = new node;
+                            newLChild->minKey = p->val;
+                            newLChild->maxKey = p->rChild->val;
+                            p->lChild = newLChild;
+
+                            getPredeccessor(p);
+                        }
+                    }
+                    else { //IF X IS RIGHT
+                        node* sibling = p->lChild;
+                        //IF SIBLING IS 3NODE
+                        if (sibling->val == NULL) {
+                            node* newX = new node;
+                            newX->val = p->val;
+                            p->rChild = newX;
+                            p->val = sibling->maxKey;
+                            convert3To2(p->lChild, "min");
+                        }
+                        else {
+                            node* newChild = new node;
+                            newChild->minKey = p->lChild->val;
+                            newChild->maxKey = p->val;
+                            if (p->p->lChild->val == NULL || p->p->rChild->val != NULL) {   //IF LEFT UNCLE IS 3NODE OR RIGHT UNCLE IS 2NODE
+                                p->rChild = newChild;
+                            }
+                            else {
+                                p->lChild = newChild;
+                            }
+                            getPredeccessor(p);
+                        }
+                    }
+                }
+            }
+        } else if (root != x) {     //IF X IS INTERNAL NODE
+            if (x->val != NULL) {
+                if (x->lChild->val == NULL || x->rChild->val == NULL) {     //IF ONE OF CHILD IS 3NODE
+                    getSuccessor(x);
+                }
+                else {
+                    node* p = x->p;
+                    node* newChild = new node;
+                    newChild->minKey = x->lChild->val;
+                    newChild->maxKey = x->rChild->val;
+                    if (p->lChild == x) {
+                        x->lChild = newChild;
+                        getPredeccessor(x);
+                    }
+                    else if (p->mChild == p) {
+                        if (p->lChild->val == NULL || p->rChild->val != NULL) {   //IF LEFT SIBLING IS 3NODE OR RIGHT SIBLING IS 2NODE
+                            x->rChild = newChild;
+                        }
+                        else {
+                            x->lChild = newChild;
+                        }
+                        getPredeccessor(x);
+                    }
+                    else {
+                        x->rChild = newChild;
+                        getPredeccessor(x);
+                    }
+                }
+            }
+            else {
+                getSuccessor3Node(x);
             }
         }
+        else {      //IF X IS ROOT
+            if (x->minKey == key || x->val != NULL) {
+                node* successor = getInnerEdgeLeaf("left");
+                if (x->val != NULL)
+                    x->val = successor->maxKey;
+                else
+                    x->minKey = successor->maxKey;
+                deletion(0, successor);
+            }
+            else {
+                node* successor = getInnerEdgeLeaf("right");
+                x->maxKey = successor->minKey;
+                deletion(0, successor);
+            }
+        }
+        cout << "DELETE SUCCESSFUL" << endl;
     }
 };
 
@@ -406,6 +670,13 @@ int main()
             cout << line << " FOUND!!" << endl;
         else
             cout << line << "  NOT FOUND" << endl;
+    }
+    in_search.close();
+
+    ifstream in_delete("delete-4.txt");
+    while (getline(in_delete, line))
+    {
+        tree.deletion(stoi(line));
     }
     in_search.close();
 }

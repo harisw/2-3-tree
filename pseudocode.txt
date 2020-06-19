@@ -35,17 +35,17 @@ if(x is leaf)
 					merge maxParent with child to be rChild
 		else if(p is 2node)
 			if(sibling is 3node)
-				move nearest sibling as parent
 				move parent down to take x's place
+				move nearest sibling as parent
 			else if(sibling is 2node)
 				merge parent with sibling
 				move grandparent down as parent
-				if(uncle(node before) of parent is 2node)
-					merge uncle with parent
-					merge uncle's family with parent family
-				else if(uncle is 3node)
+				if(uncle is 3node)
 					move uncle up as grandparent
 					steal nearest sibling as parent's child
+				else if(uncle(node before) of parent is 2node)
+					merge uncle with parent
+					merge uncle's family with parent family
 
 else if (x is internal node)
 	if(x is 2node)
