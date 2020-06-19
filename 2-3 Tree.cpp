@@ -99,33 +99,6 @@ struct twothreeTree {
         }
     }
 
-    void backupParent(node* x)
-    {
-        node* parent = x->p;
-        if (parent->lChild == x) {
-            node* rnNode = new node;
-            rnNode->val = x->maxKey;
-            parent->tempL = rnNode;
-            convert3To2(parent->lChild, "min");
-        }
-        else if (parent->rChild == x) {
-            node* lnNode = new node;
-            lnNode->val = x->minKey;
-            parent->tempR = lnNode;
-
-            convert3To2(parent->rChild, "max");
-        }
-        else {
-            node* tempL = new node;
-            tempL->val = x->minKey;
-            node* tempR = new node;
-            tempR->val = x->maxKey;
-            parent->tempL = tempL;
-            parent->tempR = tempR;
-        }
-        return;
-    }
-
     void split(node* x)
     {
         node* parent = x->p;
@@ -381,17 +354,7 @@ struct twothreeTree {
             p->rChild = NULL;
         }
     }
-    void dragChild(node* p, string direction)
-    {
-        if (direction == "left") {
-            p->lChild = p->mChild;
-            p->mChild = p->rChild;
-        }
-        else {
-            p->mChild = p->lChild;
-            p->rChild = p->mChild;
-        }
-    }
+
     void getPredeccessor(node* p)
     {
         //MOVE GRANDP AS P
@@ -746,54 +709,71 @@ struct twothreeTree {
 
 int main()
 {
-    auto start = high_resolution_clock::now();
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
+    ifstream in("input-40000.txt");
+    ifstream in_search("search-40000.txt");
+    ifstream in_delete("delete-20000.txt");
+    ofstream outfile("output-40000.txt");
     double totalDur = 0;
 
     string line;
-    int inp;
-    ifstream in("input-15.txt");
 
     twothreeTree tree;
-    int size = 0;
+    int count = 1;
     while (getline(in, line))
     {
+        auto start = high_resolution_clock::now();
         tree.insert(stoi(line));
-        size++;
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop - start).count();
+        totalDur += duration;
+        if (count % 4000 == 0) {
+            outfile << count << ". INSERT AVG : " << duration / 4000 << " microseconds" << endl;
+            totalDur = 0;
+        }
+        count++;
     }
     in.close();
+    outfile << endl << endl;
 
-    ifstream in_search("search-15.txt");
     bool res = 0;
+    count = 1;
+    totalDur = 0;
     while (getline(in_search, line))
     {
+        auto start = high_resolution_clock::now();
         res = tree.search(tree.root, stoi(line));
+        auto stop = high_resolution_clock::now();
         if (res)
             cout << line << " FOUND!!" << endl;
         else
             cout << line << "  NOT FOUND" << endl;
+        
+        auto duration = duration_cast<microseconds>(stop - start).count();
+        totalDur += duration;
+        if (count % 4000 == 0) {
+            outfile << count << ". SEARCH AVG : " << duration / 4000 << " microseconds" << endl;
+            totalDur = 0;
+        }
+        count++;
     }
     in_search.close();
+    outfile << endl << endl;
 
-    ifstream in_delete("delete-4.txt");
+
+    count = 1;
+    totalDur = 0;
     while (getline(in_delete, line))
     {
+        auto start = high_resolution_clock::now();
         tree.deletion(stoi(line));
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop - start).count();
+        totalDur += duration;
+        if (count % 4000 == 0) {
+            outfile << count << ". DELETE AVG : " << duration / 4000 << " microseconds" << endl;
+            totalDur = 0;
+        }
+        count++;
     }
     in_delete.close();
-
-    cout << endl << endl << "######################################" << endl;
-    cout << "search again" << endl;
-    ifstream other_search("search-15.txt");
-    res = 0;
-    while (getline(other_search, line))
-    {
-        res = tree.search(tree.root, stoi(line));
-        if (res)
-            cout << line << " FOUND!!" << endl;
-        else
-            cout << line << "  NOT FOUND" << endl;
-    }
-    other_search.close();
 }

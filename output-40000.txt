@@ -1,0 +1,24 @@
+4000. INSERT AVG : 0 microseconds
+8000. INSERT AVG : 0 microseconds
+12000. INSERT AVG : 0 microseconds
+16000. INSERT AVG : 0 microseconds
+20000. INSERT AVG : 0 microseconds
+24000. INSERT AVG : 0 microseconds
+28000. INSERT AVG : 0 microseconds
+32000. INSERT AVG : 0 microseconds
+36000. INSERT AVG : 0 microseconds
+40000. INSERT AVG : 0 microseconds
+
+
+4000. SEARCH AVG : 0 microseconds
+8000. SEARCH AVG : 0 microseconds
+12000. SEARCH AVG : 0 microseconds
+16000. SEARCH AVG : 0 microseconds
+20000. SEARCH AVG : 0 microseconds
+24000. SEARCH AVG : 0 microseconds
+28000. SEARCH AVG : 0 microseconds
+32000. SEARCH AVG : 0 microseconds
+36000. SEARCH AVG : 0 microseconds
+40000. SEARCH AVG : 0 microseconds
+
+
