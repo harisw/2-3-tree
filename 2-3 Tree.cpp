@@ -18,6 +18,8 @@ struct node {
     node* lChild;
     node* mChild;
     node* rChild;
+    node* tempL;
+    node* tempR;
     node* p;
     node() {
         val = NULL;
@@ -27,6 +29,8 @@ struct node {
         mChild = NULL;
         rChild = NULL;
         p = NULL;
+        tempL = NULL;
+        tempR = NULL;
     }
 };
 
@@ -94,104 +98,190 @@ struct twothreeTree {
             split(x);
         }
     }
-    void split(node* x, int pos = 0)
+    void backupParent(node* x)
     {
         node* parent = x->p;
-        if (parent == NULL) {        //IF THIS IS ROOT
+        if (parent->lChild == x) {
+            node* rnNode = new node;
+            rnNode->val = x->maxKey;
+            parent->tempL = rnNode;
+            convert3To2(parent->lChild, "min");
+        }
+        else if (parent->rChild == x) {
+            node* lnNode = new node;
+            lnNode->val = x->minKey;
+            parent->tempR = lnNode;
+
+            convert3To2(parent->rChild, "max");
+        }
+        else {
+            node* tempL = new node;
+            tempL->val = x->minKey;
+            node* tempR = new node;
+            tempR->val = x->maxKey;
+            parent->tempL = tempL;
+            parent->tempR = tempR;
+        }
+        return;
+    }
+    void split(node* x)
+    {
+        node* parent = x->p;
+        if (root == x) {        //IF THIS IS ROOT
             node* newNode = new node;
             newNode->val = x->val;
-            node* lnNode = new node;
-            node* rnNode = new node;
+            node* newLeft = new node;
+            node* newRight = new node;
 
-            if (x->mChild != NULL && x->mChild->val == NULL) {
-                node* leftGrandChild = new node;
-                leftGrandChild->val = x->mChild->minKey;
-                lnNode->rChild = leftGrandChild;
-                lnNode->lChild = x->lChild;
-                lnNode->lChild->p = lnNode;
-
-                node* rightGrandChild = new node;
-                rightGrandChild->val = x->mChild->maxKey;
-                rnNode->lChild = rightGrandChild;
-                rnNode->rChild = x->rChild;
-                rnNode->rChild->p = rnNode;
-            }
             //MOVE SMALL&LARGE KEY TO 2 NODES
+            newLeft->val = x->minKey;
+            newLeft->p = newNode;
+            newLeft->lChild = x->lChild;
+            if (newLeft->lChild != NULL)
+                newLeft->lChild->p = newLeft;
 
-            lnNode->val = x->minKey;
-            lnNode->p = newNode;
-            newNode->lChild = lnNode;
+            newRight->val = x->maxKey;
+            newRight->p = newNode;
+            newRight->rChild = x->rChild;
+            if (newRight->rChild != NULL)
+                newRight->rChild->p = newRight;
 
+            if (x->tempL != NULL && x->tempR != NULL) {
+                newLeft->rChild = x->tempL;
+                x->tempL->p = newLeft;
+                newRight->lChild = x->tempR;
+                x->tempR->p = newRight;
+            }
+            else if (x->tempL != NULL) {
+                newLeft->rChild = x->tempL;
+                x->tempL->p = newLeft;
+                newRight->lChild = x->mChild;
+                x->mChild->p = newRight;
+            }
+            else if (x->tempR != NULL) {
+                newRight->lChild = x->tempR;
+                x->tempR->p = newRight;
+                newLeft->rChild = x->mChild;
+                x->mChild->p = newLeft;
+            }
+            x->tempL = NULL;
+            x->tempR = NULL;
 
-            rnNode->val = x->maxKey;
-            rnNode->p = newNode;
-            newNode->rChild = rnNode;
+            newNode->rChild = newRight;
+            newNode->lChild = newLeft;
+            newLeft->p = newNode;
+            newRight->p = newNode;
             root = newNode;
+        }
+        else if (x->tempL != NULL || x->tempR != NULL) {        //IF THIS IS INTERNAL NODE AND HAS BACKUP NODE
+            moveKeyUp(x);
+
+            node* newLeft = new node;
+            newLeft->val = x->minKey;
+            newLeft->lChild = x->lChild;
+            newLeft->lChild->p = newLeft;
+
+            node* newRight = new node;
+            newRight->val = x->maxKey;
+            newRight->rChild = x->rChild;
+            newRight->rChild->p = newRight;
+
+            if (x->tempL != NULL && x->tempR != NULL) {
+                newLeft->rChild = x->tempL;
+                x->tempL->p = newLeft;
+                newRight->lChild = x->tempR;
+                x->tempR->p = newRight;
+            }
+            else if (x->tempL != NULL) {
+                newLeft->rChild = x->tempL;
+                x->tempL->p = newLeft;
+                newRight->lChild = x->mChild;
+                x->mChild->p = newRight;
+            }
+            else if (x->tempR != NULL) {
+                newRight->lChild = x->tempR;
+                x->tempR->p = newRight;
+                newLeft->rChild = x->mChild;
+                x->mChild->p = newLeft;
+            }
+            x->tempL = NULL;
+            x->tempR = NULL;
+
+            if (parent->val != NULL && parent->minKey != NULL) {           //IF PARENT ALREADY HAVE 3      AND SPLIT HAPPEN IN LEAF
+                //BACKUP NODE TO BE SPLIT AT PARENT
+                if (parent->lChild == x) {
+                    parent->tempL = newRight;
+                    parent->lChild = newLeft;
+                }
+                else if (parent->rChild == x) {
+                    parent->tempR = newLeft;
+                    parent->rChild = newRight;
+                }
+                else {
+                    parent->tempL = newLeft;
+                    parent->tempR = newRight;
+                }
+                split(parent);
+            }
+            else{
+                if (parent->lChild == x) {
+                    parent->lChild = newLeft;
+                    parent->mChild = newRight;
+                }
+                else {
+                    parent->mChild = newLeft;
+                    parent->rChild = newRight;
+                }
+                newLeft->p = parent;
+                newRight->p = parent;
+            }
         }
         else {
             //MOVE MID KEY UP TO PARENT
             moveKeyUp(x);
             node* lnNode = new node;
+            lnNode->val = x->minKey;
             node* rnNode = new node;
+            rnNode->val = x->maxKey;
 
-            if (x->mChild != NULL && x->mChild->val == NULL) {
-                node* leftGrandChild = new node;
-                leftGrandChild->val = x->mChild->minKey;
-                lnNode->rChild = leftGrandChild;
-                lnNode->lChild = x->lChild;
-                lnNode->lChild->p = lnNode;
-
-                node* rightGrandChild = new node;
-                rightGrandChild->val = x->mChild->maxKey;
-                rnNode->lChild = rightGrandChild;
-                rnNode->rChild = x->rChild;
-                rnNode->rChild->p = rnNode;
-            }
-            ////MOVE SMALL&LARGE KEY TO 2 NODES
-            //lnNode->val = x->minKey;
-            //lnNode->p = parent;
-
-            //rnNode->val = x->maxKey;
-            //rnNode->p = parent;
-
-            x->val = NULL;
-            if (parent->lChild == x) {
-                //MOVE SMALL&LARGE KEY TO 2 NODES
-                lnNode->val = x->minKey;
-                lnNode->p = parent;
-
-                rnNode->val = x->maxKey;
-                rnNode->p = parent;
-
-                parent->lChild = lnNode;
-                if(parent->mChild == NULL)
-                    parent->mChild = rnNode;
-                else {
-                    parent->mChild->minKey = rnNode->val;
-                    parent->mChild->maxKey = parent->mChild->val;
-                    parent->mChild->val = NULL;
-                    split(parent);
+            if (parent->val != NULL && parent->minKey != NULL) {           //IF PARENT ALREADY HAVE 3      AND SPLIT HAPPEN IN LEAF
+                //BACKUP NODE TO BE SPLIT AT PARENT
+                if (parent->lChild == x) {
+                    parent->tempL = rnNode;
+                    parent->lChild = lnNode;
+                    lnNode->p = parent;
+                    //convert3To2(parent->lChild, "min");
                 }
-            }
-            else if(parent->rChild == x){
-                //MOVE SMALL&LARGE KEY TO 2 NODES
-                lnNode->val = x->minKey;
-                lnNode->p = parent;
-
-                rnNode->val = x->maxKey;
-                rnNode->p = parent;
-                parent->rChild = rnNode;
-                if(parent->mChild == NULL)
-                    parent->mChild = lnNode;
-                else {
-                    parent->mChild->maxKey = lnNode->val;
-                    parent->mChild->minKey = parent->mChild->val;
-                    parent->mChild->val = NULL;
-                    split(parent);
+                else if (parent->rChild == x) {
+                    parent->tempR = lnNode;
+                    parent->rChild = rnNode;
+                    rnNode->p = parent;
+                    //convert3To2(parent->rChild, "max");
                 }
+                else {
+                    node* tempL = new node;
+                    tempL->val = x->minKey;
+                    node* tempR = new node;
+                    tempR->val = x->maxKey;
+                    parent->tempL = tempL;
+                    parent->tempR = tempR;
+                    tempL->p = parent;
+                    tempR->p = parent;
+                }
+                split(parent);
             }
             else {
-                split(parent);
+                //IF PARENT IS 2NODE
+                if (parent->lChild == x) {
+                    parent->lChild = lnNode;
+                    parent->mChild = rnNode;
+                }
+                else if (parent->rChild == x) {
+                    parent->mChild = lnNode;
+                    parent->rChild = rnNode;
+                }
+                lnNode->p = parent;
+                rnNode->p = parent;
             }
         }
     }
@@ -224,7 +314,7 @@ struct twothreeTree {
                 parent->val = midKey;
             }
         }
-
+        //return parent;
     }
 
     node* search(node* n, int target)
@@ -461,7 +551,11 @@ struct twothreeTree {
     }
     void deletion(int key, node* target = NULL)
     {
-        node* x = target == NULL ? search(root, key) : target;
+        node* x = new node;
+        if (target == NULL)
+            x = search(root, key);
+        else
+            x = target;
         if (x == NULL) {
             cout << "Key NOT FOUND" << endl;
             return;
@@ -654,10 +748,11 @@ int main()
     ifstream in("input-15.txt");
 
     twothreeTree tree;
-
+    int size = 0;
     while (getline(in, line))
     {
         tree.insert(stoi(line));
+        size++;
     }
     in.close();
 
@@ -678,5 +773,19 @@ int main()
     {
         tree.deletion(stoi(line));
     }
-    in_search.close();
+    in_delete.close();
+
+    cout << endl << endl << "######################################" << endl;
+    cout << "search again" << endl;
+    ifstream other_search("search-15.txt");
+    res = 0;
+    while (getline(other_search, line))
+    {
+        res = tree.search(tree.root, stoi(line));
+        if (res)
+            cout << line << " FOUND!!" << endl;
+        else
+            cout << line << "  NOT FOUND" << endl;
+    }
+    other_search.close();
 }
