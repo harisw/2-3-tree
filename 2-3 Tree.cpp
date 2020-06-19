@@ -98,6 +98,7 @@ struct twothreeTree {
             split(x);
         }
     }
+
     void backupParent(node* x)
     {
         node* parent = x->p;
@@ -124,6 +125,7 @@ struct twothreeTree {
         }
         return;
     }
+
     void split(node* x)
     {
         node* parent = x->p;
@@ -420,10 +422,9 @@ struct twothreeTree {
                 grandp->mChild = NULL;
             }
         }
-        else if (grandp->mChild == p) {
-            p->val = grandp->minKey;
-            
+        else if (grandp->mChild == p) {            
             if (grandp->lChild->val == NULL) {       //IF left UNCLE IS 3NODE
+                p->val = grandp->minKey;
                 node* uncle = grandp->lChild;
 
                 grandp->minKey = uncle->maxKey;
@@ -435,8 +436,8 @@ struct twothreeTree {
                 uncle->lChild = NULL;
             }
             else if (grandp->rChild->val == NULL) {     //IF RIGHT UNCLE IS 3NODE
+                p->val = grandp->maxKey;
                 node* uncle = grandp->rChild;
-
                 grandp->maxKey = uncle->minKey;
                 convert3To2(uncle, "max");
 
@@ -445,6 +446,7 @@ struct twothreeTree {
                 uncle->mChild = NULL;
             }
             else {                              //MERGE LEFT UNCLE AND P
+                p->val = grandp->minKey;
                 node* uncle = grandp->lChild;
 
                 p->maxKey = p->val;
@@ -503,11 +505,13 @@ struct twothreeTree {
     {
         node* res = root;
         if (direction == "left") {
-            while (res->lChild == NULL && res->rChild == NULL)
+            res = res->lChild;
+            while (res->lChild != NULL && res->rChild != NULL)
                 res = res->rChild;
         }
         else {
-            while (res->lChild == NULL && res->rChild == NULL)
+            res = res->rChild;
+            while (res->lChild != NULL && res->rChild != NULL)
                 res = res->lChild;
         }
         return res;
@@ -528,7 +532,6 @@ struct twothreeTree {
                 x->lChild->maxKey = x->mChild->val;
                 x->lChild->val = NULL;
                 x->mChild = NULL;
-                convert3To2(x, "max");
             }
         }
         else {
@@ -545,7 +548,6 @@ struct twothreeTree {
                 x->rChild->maxKey = x->rChild->val;
                 x->rChild->val = NULL;
                 x->mChild = NULL;
-                convert3To2(x, "min");
             }
         }
     }
@@ -557,7 +559,7 @@ struct twothreeTree {
         else
             x = target;
         if (x == NULL) {
-            cout << "Key NOT FOUND" << endl;
+            cout << key << " : Key NOT FOUND" << endl;
             return;
         }
 
@@ -687,6 +689,7 @@ struct twothreeTree {
         } else if (root != x) {     //IF X IS INTERNAL NODE
             if (x->val != NULL) {
                 if (x->lChild->val == NULL || x->rChild->val == NULL) {     //IF ONE OF CHILD IS 3NODE
+                    deleteKeyFrom2Node(x);
                     getSuccessor(x);
                 }
                 else {
@@ -695,11 +698,13 @@ struct twothreeTree {
                     newChild->minKey = x->lChild->val;
                     newChild->maxKey = x->rChild->val;
                     if (p->lChild == x) {
+                        /*deleteKeyFrom2Node(x);*/
                         x->lChild = newChild;
                         getPredeccessor(x);
                     }
-                    else if (p->mChild == p) {
-                        if (p->lChild->val == NULL || p->rChild->val != NULL) {   //IF LEFT SIBLING IS 3NODE OR RIGHT SIBLING IS 2NODE
+                    else if (p->mChild == x) {
+                        //deleteKeyFrom2Node(x);
+                        if (p->lChild->val == NULL || p->rChild->val == NULL) {   //IF LEFT SIBLING IS 3NODE OR RIGHT SIBLING IS 2NODE
                             x->rChild = newChild;
                         }
                         else {
@@ -708,12 +713,14 @@ struct twothreeTree {
                         getPredeccessor(x);
                     }
                     else {
+                        //deleteKeyFrom2Node(x);
                         x->rChild = newChild;
                         getPredeccessor(x);
                     }
                 }
             }
             else {
+                deleteKeyFrom3Node(x, key);
                 getSuccessor3Node(x);
             }
         }
@@ -724,15 +731,16 @@ struct twothreeTree {
                     x->val = successor->maxKey;
                 else
                     x->minKey = successor->maxKey;
-                deletion(0, successor);
+                deletion(successor->maxKey, successor);     //DELETE SUCCESSOR FROM LEAF
             }
             else {
                 node* successor = getInnerEdgeLeaf("right");
                 x->maxKey = successor->minKey;
-                deletion(0, successor);
+                deletion(successor->minKey, successor);
             }
         }
-        cout << "DELETE SUCCESSFUL" << endl;
+        if(target == NULL)
+            cout << key << " : Key DELETE SUCCESSFUL" << endl;
     }
 };
 
