@@ -359,110 +359,184 @@ struct twothreeTree {
     {
         //MOVE GRANDP AS P
         node* grandp = p->p;
-        if (grandp->lChild == p) {
-            p->val = grandp->minKey;
+        bool fixP = 0;
+        //if (grandp->val != NULL) {
+        //    if (grandp->lChild == p) {
+        //        p->val = grandp->val;
 
-            node* uncle = grandp->mChild;
-            if (uncle->val == NULL) {       //IF UNCLE IS 2NODE
-                grandp->minKey = uncle->minKey;
-                convert3To2(uncle, "max");
-            
-                //STEAL UNCLE CHILD
-                p->rChild = uncle->lChild;
-                uncle->lChild = uncle->mChild;
-                uncle->mChild = NULL;
+        //        node* uncle = grandp->mChild != NULL ? grandp->mChild : grandp->rChild;
+        //        if (uncle->val == NULL) {       //IF UNCLE IS 2NODE
+        //            grandp->minKey = uncle->minKey;
+        //            convert3To2(uncle, "max");
+
+        //            //STEAL UNCLE CHILD
+        //            p->rChild = uncle->lChild;
+        //            uncle->lChild = uncle->mChild;
+        //            uncle->mChild = NULL;
+        //        }
+        //        else {
+        //            //MERGE UNCLE AND PARENT
+        //            p->minKey = p->val;
+        //            p->val = NULL;
+        //            p->maxKey = uncle->val;
+
+        //            p->mChild = uncle->lChild;
+        //            p->rChild = uncle->rChild;
+        //            p->mChild->p = p;
+        //            p->rChild->p = p;
+        //            grandp->mChild = NULL;
+        //            convert3To2(grandp, "max");
+        //        }
+        //    }
+        //    else {
+        //        p->val = grandp->maxKey;
+
+        //        node* uncle = grandp->mChild != NULL ? grandp->mChild : grandp->lChild;
+        //        if (uncle->val == NULL) {       //IF UNCLE IS 2NODE
+        //            grandp->maxKey = uncle->maxKey;
+        //            convert3To2(uncle, "min");
+
+        //            //STEAL UNCLE CHILD
+        //            p->lChild = uncle->rChild;
+        //            uncle->rChild = uncle->mChild;
+        //            uncle->mChild = NULL;
+        //        }
+        //        else {
+        //            //MERGE UNCLE AND PARENT
+        //            p->maxKey = p->val;
+        //            p->val = NULL;
+        //            p->minKey = uncle->val;
+
+        //            p->mChild = uncle->rChild;
+        //            p->lChild = uncle->lChild;
+        //            p->mChild->p = p;
+        //            p->lChild->p = p;
+        //            grandp->mChild = NULL;
+        //            convert3To2(grandp, "min");
+        //        }
+        //    }
+        //}
+        //else {
+            if (grandp->lChild == p) {
+                if (grandp->val != NULL) {
+                    p->val = grandp->val;
+                    fixP = 1;
+                } else 
+                    p->val = grandp->minKey;
+
+                node* uncle = grandp->mChild != NULL ? grandp->mChild : grandp->rChild;
+                if (uncle->val == NULL) {       //IF UNCLE IS 2NODE
+                    grandp->minKey = uncle->minKey;
+                    convert3To2(uncle, "max");
+
+                    //STEAL UNCLE CHILD
+                    p->rChild = uncle->lChild;
+                    uncle->lChild = uncle->mChild;
+                    uncle->mChild = NULL;
+                }
+                else {
+                    //MERGE UNCLE AND PARENT
+                    p->minKey = p->val;
+                    p->val = NULL;
+                    p->maxKey = uncle->val;
+
+                    p->mChild = uncle->lChild;
+                    p->rChild = uncle->rChild;
+                    p->mChild->p = p;
+                    p->rChild->p = p;
+                    grandp->mChild = NULL;
+                    convert3To2(grandp, "max");
+                }
+            }
+            else if (grandp->mChild == p) {
+                if (grandp->lChild->val == NULL) {       //IF left UNCLE IS 3NODE
+                    p->val = grandp->minKey;
+                    node* uncle = grandp->lChild;
+
+                    grandp->minKey = uncle->maxKey;
+                    convert3To2(uncle, "min");
+
+                    //STEAL UNCLE CHILD
+                    p->lChild = uncle->rChild;
+                    uncle->rChild = uncle->mChild;
+                    uncle->lChild = NULL;
+                }
+                else if (grandp->rChild->val == NULL) {     //IF RIGHT UNCLE IS 3NODE
+                    p->val = grandp->maxKey;
+                    node* uncle = grandp->rChild;
+                    grandp->maxKey = uncle->minKey;
+                    convert3To2(uncle, "max");
+
+                    p->rChild = uncle->lChild;
+                    uncle->lChild = uncle->mChild;
+                    uncle->mChild = NULL;
+                }
+                else {                              //MERGE LEFT UNCLE AND P
+                    p->val = grandp->minKey;
+                    node* uncle = grandp->lChild;
+
+                    p->maxKey = p->val;
+                    p->val = NULL;
+                    p->minKey = uncle->val;
+
+                    p->mChild = uncle->rChild;
+                    p->lChild = uncle->lChild;
+                    p->mChild->p = p;
+                    p->lChild->p = p;
+                    grandp->lChild = p;
+                    grandp->mChild = NULL;
+                    convert3To2(grandp, "max");
+                }
             }
             else {
-                //MERGE UNCLE AND PARENT
-                p->minKey = p->val;
-                p->val = NULL;
-                p->maxKey = uncle->val;
+                if (grandp->val != NULL) {
+                    p->val = grandp->val;
+                    fixP = 1;
+                }
+                else
+                    p->val = grandp->maxKey;
 
-                p->mChild = uncle->lChild;
-                p->rChild = uncle->rChild;
-                p->mChild->p = p;
-                p->rChild->p = p;
-                grandp->mChild = NULL;
+                node* uncle = grandp->mChild != NULL ? grandp->mChild : grandp->lChild;
+                if (uncle->val == NULL) {       //IF UNCLE IS 2NODE
+                    grandp->maxKey = uncle->maxKey;
+                    convert3To2(uncle, "min");
+
+                    //STEAL UNCLE CHILD
+                    p->lChild = uncle->rChild;
+                    uncle->rChild = uncle->mChild;
+                    uncle->mChild = NULL;
+                }
+                else {
+                    //MERGE UNCLE AND PARENT
+                    p->maxKey = p->val;
+                    p->val = NULL;
+                    p->minKey = uncle->val;
+
+                    p->mChild = uncle->rChild;
+                    p->lChild = uncle->lChild;
+                    p->mChild->p = p;
+                    p->lChild->p = p;
+                    grandp->mChild = NULL;
+                    convert3To2(grandp, "min");
+                }
             }
-        }
-        else if (grandp->mChild == p) {            
-            if (grandp->lChild->val == NULL) {       //IF left UNCLE IS 3NODE
-                p->val = grandp->minKey;
-                node* uncle = grandp->lChild;
-
-                grandp->minKey = uncle->maxKey;
-                convert3To2(uncle, "min");
-
-                //STEAL UNCLE CHILD
-                p->lChild = uncle->rChild;
-                uncle->rChild = uncle->mChild;
-                uncle->lChild = NULL;
-            }
-            else if (grandp->rChild->val == NULL) {     //IF RIGHT UNCLE IS 3NODE
-                p->val = grandp->maxKey;
-                node* uncle = grandp->rChild;
-                grandp->maxKey = uncle->minKey;
-                convert3To2(uncle, "max");
-
-                p->rChild = uncle->lChild;
-                uncle->lChild = uncle->mChild;
-                uncle->mChild = NULL;
-            }
-            else {                              //MERGE LEFT UNCLE AND P
-                p->val = grandp->minKey;
-                node* uncle = grandp->lChild;
-
-                p->maxKey = p->val;
-                p->val = NULL;
-                p->minKey = uncle->val;
-
-                p->mChild = uncle->rChild;
-                p->lChild = uncle->lChild;
-                p->mChild->p = p;
-                p->lChild->p = p;
-                grandp->lChild = p;
-                grandp->mChild = NULL;
-            }
-        }
-        else {
-            p->val = grandp->maxKey;
-
-            node* uncle = grandp->mChild;
-            if (uncle->val == NULL) {       //IF UNCLE IS 2NODE
-                grandp->maxKey = uncle->maxKey;
-                convert3To2(uncle, "min");
-
-                //STEAL UNCLE CHILD
-                p->lChild = uncle->rChild;
-                uncle->rChild = uncle->mChild;
-                uncle->mChild = NULL;
-            }
-            else {
-                //MERGE UNCLE AND PARENT
-                p->maxKey = p->val;
-                p->val = NULL;
-                p->minKey = uncle->val;
-
-                p->mChild = uncle->rChild;
-                p->lChild = uncle->lChild;
-                p->mChild->p = p;
-                p->lChild->p = p;
-                grandp->mChild = NULL;
-            }
-        }
+            if (fixP)
+                getPredeccessor(p);
+        //}
     }
     void getSuccessor(node* x)
     {
-        if (x->val != NULL) {
+        //if (x->val != NULL) {
             if (x->lChild->val == NULL) {
                 x->val = x->lChild->maxKey;
-                convert3To2(x, "min");
+                convert3To2(x->lChild, "min");
             }
             else {
                 x->val = x->rChild->minKey;
-                convert3To2(x, "max");
+                convert3To2(x->rChild, "max");
             }
-        }
+            
+        //}
     }
     node* getInnerEdgeLeaf(string direction)
     {
@@ -616,11 +690,26 @@ struct twothreeTree {
                         }
                         else {
                             //MERGE P AND RCHILD AS NEW LCHILD
-                            node* newLChild = new node;
-                            newLChild->minKey = p->val;
-                            newLChild->maxKey = p->rChild->val;
-                            p->lChild = newLChild;
+                            node* newChild = new node;
+                            newChild->minKey = p->val;
+                            newChild->maxKey = p->rChild->val;
+                            node* grandp = p->p;
 
+                            p->mChild = newChild;      //TEMPORARILY PLACED
+                            if (grandp->lChild == p) {
+                                p->lChild = newChild;
+                            }
+                            else if (p->mChild == x) {
+                                if (grandp->lChild->val == NULL || grandp->rChild->val == NULL) {   //IF LEFT SIBLING IS 3NODE OR RIGHT SIBLING IS 2NODE
+                                    p->rChild = newChild;
+                                }
+                                else {
+                                    p->lChild = newChild;
+                                }
+                            }
+                            else {
+                                p->rChild = newChild;
+                            }
                             getPredeccessor(p);
                         }
                     }
@@ -635,14 +724,26 @@ struct twothreeTree {
                             convert3To2(p->lChild, "min");
                         }
                         else {
+                            //MERGE P AND CHILD AS NEW LCHILD
                             node* newChild = new node;
                             newChild->minKey = p->lChild->val;
                             newChild->maxKey = p->val;
-                            if (p->p->lChild->val == NULL || p->p->rChild->val != NULL) {   //IF LEFT UNCLE IS 3NODE OR RIGHT UNCLE IS 2NODE
-                                p->rChild = newChild;
+                            node* grandp = p->p;
+                            
+
+                            if (grandp->lChild == p) {
+                                p->lChild = newChild;
+                            }
+                            else if (p->mChild == x) {
+                                if (grandp->lChild->val == NULL || grandp->rChild->val == NULL) {   //IF LEFT SIBLING IS 3NODE OR RIGHT SIBLING IS 2NODE
+                                    p->rChild = newChild;
+                                }
+                                else {
+                                    p->lChild = newChild;
+                                }
                             }
                             else {
-                                p->lChild = newChild;
+                                p->rChild = newChild;
                             }
                             getPredeccessor(p);
                         }
@@ -652,7 +753,7 @@ struct twothreeTree {
         } else if (root != x) {     //IF X IS INTERNAL NODE
             if (x->val != NULL) {
                 if (x->lChild->val == NULL || x->rChild->val == NULL) {     //IF ONE OF CHILD IS 3NODE
-                    deleteKeyFrom2Node(x);
+                    //deleteKeyFrom2Node(x);
                     getSuccessor(x);
                 }
                 else {
@@ -709,10 +810,11 @@ struct twothreeTree {
 
 int main()
 {
-    ifstream in("input-40000.txt");
-    ifstream in_search("search-40000.txt");
-    ifstream in_delete("delete-20000.txt");
+    ifstream in("input-15.txt");
+    ifstream in_search("search-15.txt");
+    ifstream in_delete("delete-4.txt");
     ofstream outfile("output-40000.txt");
+    ofstream resfile("search-result.txt");
     double totalDur = 0;
 
     string line;
@@ -764,7 +866,7 @@ int main()
     totalDur = 0;
     while (getline(in_delete, line))
     {
-        auto start = high_resolution_clock::now();
+         auto start = high_resolution_clock::now();
         tree.deletion(stoi(line));
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<microseconds>(stop - start).count();
@@ -776,4 +878,5 @@ int main()
         count++;
     }
     in_delete.close();
+    resfile.close();
 }
