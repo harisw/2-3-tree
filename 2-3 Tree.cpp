@@ -360,64 +360,8 @@ struct twothreeTree {
         //MOVE GRANDP AS P
         node* grandp = p->p;
         bool fixP = 0;
-        //if (grandp->val != NULL) {
-        //    if (grandp->lChild == p) {
-        //        p->val = grandp->val;
 
-        //        node* uncle = grandp->mChild != NULL ? grandp->mChild : grandp->rChild;
-        //        if (uncle->val == NULL) {       //IF UNCLE IS 2NODE
-        //            grandp->minKey = uncle->minKey;
-        //            convert3To2(uncle, "max");
-
-        //            //STEAL UNCLE CHILD
-        //            p->rChild = uncle->lChild;
-        //            uncle->lChild = uncle->mChild;
-        //            uncle->mChild = NULL;
-        //        }
-        //        else {
-        //            //MERGE UNCLE AND PARENT
-        //            p->minKey = p->val;
-        //            p->val = NULL;
-        //            p->maxKey = uncle->val;
-
-        //            p->mChild = uncle->lChild;
-        //            p->rChild = uncle->rChild;
-        //            p->mChild->p = p;
-        //            p->rChild->p = p;
-        //            grandp->mChild = NULL;
-        //            convert3To2(grandp, "max");
-        //        }
-        //    }
-        //    else {
-        //        p->val = grandp->maxKey;
-
-        //        node* uncle = grandp->mChild != NULL ? grandp->mChild : grandp->lChild;
-        //        if (uncle->val == NULL) {       //IF UNCLE IS 2NODE
-        //            grandp->maxKey = uncle->maxKey;
-        //            convert3To2(uncle, "min");
-
-        //            //STEAL UNCLE CHILD
-        //            p->lChild = uncle->rChild;
-        //            uncle->rChild = uncle->mChild;
-        //            uncle->mChild = NULL;
-        //        }
-        //        else {
-        //            //MERGE UNCLE AND PARENT
-        //            p->maxKey = p->val;
-        //            p->val = NULL;
-        //            p->minKey = uncle->val;
-
-        //            p->mChild = uncle->rChild;
-        //            p->lChild = uncle->lChild;
-        //            p->mChild->p = p;
-        //            p->lChild->p = p;
-        //            grandp->mChild = NULL;
-        //            convert3To2(grandp, "min");
-        //        }
-        //    }
-        //}
-        //else {
-            if (grandp->lChild == p) {
+            if (grandp != NULL && grandp->lChild == p) {
                 if (grandp->val != NULL) {
                     p->val = grandp->val;
                     fixP = 1;
@@ -444,11 +388,13 @@ struct twothreeTree {
                     p->rChild = uncle->rChild;
                     p->mChild->p = p;
                     p->rChild->p = p;
-                    grandp->mChild = NULL;
-                    convert3To2(grandp, "max");
+                    if (grandp->val == NULL) {
+                        grandp->mChild = NULL;
+                        convert3To2(grandp, "max");
+                    }
                 }
             }
-            else if (grandp->mChild == p) {
+            else if (grandp != NULL && grandp->mChild == p) {
                 if (grandp->lChild->val == NULL) {       //IF left UNCLE IS 3NODE
                     p->val = grandp->minKey;
                     node* uncle = grandp->lChild;
@@ -516,12 +462,45 @@ struct twothreeTree {
                     p->lChild = uncle->lChild;
                     p->mChild->p = p;
                     p->lChild->p = p;
-                    grandp->mChild = NULL;
-                    convert3To2(grandp, "min");
+                    if (grandp->val == NULL) {
+                        grandp->mChild = NULL;
+                        convert3To2(grandp, "min");
+                    }
                 }
             }
-            if (fixP)
-                getPredeccessor(p);
+            if (fixP) {
+                //FIXING GRANDP RELATION
+                if (grandp->p == root) {
+                    node* successor = new node;
+                    if(grandp->p->lChild == grandp) {
+                        successor = grandp->p->rChild;
+                        successor->minKey = grandp->p->val;
+                        successor->maxKey = successor->val;
+                        successor->val = NULL;
+                        successor->lChild = p;
+                        successor->mChild = successor->lChild;
+                    }
+                    else {
+                        successor = grandp->p->lChild;
+                        successor->minKey = successor->val;
+                        successor->maxKey = grandp->p->val;
+                        successor->val = NULL;
+                        successor->mChild = successor->rChild;
+                        successor->rChild = p;
+                    }
+                    p->p = successor;
+                    root = successor;
+                    return;
+                }
+                else {
+                    if (grandp->p->lChild == grandp)
+                        grandp->p->lChild = p;
+                    else if (grandp->p->rChild == grandp)
+                        grandp->p->rChild = p;
+                    p->p = grandp->p;
+                }
+                getPredeccessor(p->p);
+            }
         //}
     }
     void getSuccessor(node* x)
@@ -564,6 +543,12 @@ struct twothreeTree {
                 x->minKey = x->mChild->minKey;
                 convert3To2(x->mChild, "max");
             }
+            else if (x->rChild->val == NULL) {
+                x->minKey = x->mChild->val;
+                x->mChild->val = x->maxKey;
+                x->maxKey = x->rChild->minKey;
+                convert3To2(x->rChild, "max");
+            }
             else {      //MERGE L&M CHILD
                 x->lChild->minKey = x->lChild->val;
                 x->lChild->maxKey = x->mChild->val;
@@ -579,6 +564,12 @@ struct twothreeTree {
             else if (x->rChild->val == NULL) {
                 x->maxKey = x->rChild->minKey;
                 convert3To2(x->rChild, "max");
+            }
+            else if (x->lChild->val == NULL) {
+                x->maxKey = x->mChild->val;
+                x->mChild->val = x->minKey;
+                x->minKey = x->lChild->maxKey;
+                convert3To2(x->lChild, "min");
             }
             else {
                 x->rChild->minKey = x->mChild->val;
@@ -695,7 +686,7 @@ struct twothreeTree {
                             newChild->maxKey = p->rChild->val;
                             node* grandp = p->p;
 
-                            p->mChild = newChild;      //TEMPORARILY PLACED
+                            //p->mChild = newChild;      //TEMPORARILY PLACED
                             if (grandp->lChild == p) {
                                 p->lChild = newChild;
                             }
